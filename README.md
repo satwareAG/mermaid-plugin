@@ -4,15 +4,23 @@ A TypingMind plugin for rendering Mermaid diagrams with comprehensive syntax sup
 
 ## Features
 
-- **Mermaid.js v11.6** - Latest stable version with all diagram types
-- **ZenUML Support** - Sequence diagrams with ZenUML syntax
+- **Mermaid.js v11.12.2** - Latest stable version with all diagram types
+- **ZenUML Support** - Sequence diagrams with ZenUML syntax (v0.2.2)
+- **Zoom Controls** - Interactive zoom in/out with keyboard shortcuts
+- **Export Options** - Download diagrams as SVG or PNG
 - **Icon Packs** - Built-in support for multiple icon libraries:
   - Technology & Brand Logos (`logos`, `simple-icons`)
   - Material Design Icons (`mdi`)
   - Font Awesome 6 (`fa6-solid`, `fa6-regular`, `fa6-brands`)
-- **Dark Mode** - Automatically adapts to theme
 - **Error Handling** - Clear error messages for syntax issues
 - **Responsive** - Mobile-friendly diagram rendering
+
+## New in v1.1.0
+
+- **Zoom Controls**: 25% to 400% zoom with Ctrl/Cmd +/- keyboard shortcuts
+- **SVG Export**: Download diagrams in vector format
+- **PNG Export**: 2x resolution with cross-origin fallback handling
+- **Modern UI**: Sticky header with button groups
 
 ## Supported Diagram Types
 
@@ -35,6 +43,7 @@ A TypingMind plugin for rendering Mermaid diagrams with comprehensive syntax sup
 - XY Chart (`xychart-beta`)
 - Sankey Diagram (`sankey-beta`)
 - Packet Diagram (`packet-beta`)
+- Block Diagram (`block-beta`)
 - Architecture (`architecture-beta`)
 - Radar Chart (`radar-beta`)
 
@@ -72,6 +81,14 @@ You can also manually invoke the function:
   }
 }
 ```
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd` + `+` | Zoom in |
+| `Ctrl/Cmd` + `-` | Zoom out |
+| `Ctrl/Cmd` + `0` | Reset zoom |
 
 ### Diagram Examples
 
@@ -133,9 +150,12 @@ Find icons at: [icones.js.org](https://icones.js.org)
 ## Technical Details
 
 ### Dependencies
-- **Mermaid.js**: v11 (ESM module from CDN)
-- **ZenUML Plugin**: v0.2.0
-- **Iconify JSON**: v1 (multiple packs)
+
+| Package | Version |
+|---------|---------|
+| Mermaid.js | v11.12.2 |
+| ZenUML Plugin | v0.2.2 |
+| Iconify JSON | v1 (multiple packs) |
 
 ### Plugin Specification
 - **Function Name**: `render_mermaid_diagram`
@@ -150,7 +170,7 @@ Find icons at: [icones.js.org](https://icones.js.org)
 
 ## Context Instructions
 
-The plugin includes comprehensive Mermaid v11.6 syntax requirements that guide the AI in generating valid diagrams. This ensures:
+The plugin includes comprehensive Mermaid v11 syntax requirements that guide the AI in generating valid diagrams. This ensures:
 - Correct diagram prefixes
 - Proper node syntax
 - Valid relationship definitions
@@ -171,6 +191,9 @@ Parse errors are displayed below the diagram area with detailed error messages. 
 - Incorrect relationship syntax
 - HTML tags in node definitions (not allowed)
 
+### PNG Export Issues
+If PNG export fails (e.g., with diagrams using external icons), the plugin automatically falls back to SVG download.
+
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details
@@ -189,7 +212,9 @@ For issues or questions:
 
 ## Version
 
-Current version: 1.0.0
+Current version: **1.1.0**
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Resources
 
