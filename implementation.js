@@ -1,14 +1,13 @@
 function render_mermaid_diagram(params) {
     const { title, source } = params;
     function htmlEncode(str) {
-        return str;
-        return str.replace(/&/g, '&amp;')
+        return str
+            .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
-
 
     const encodedSource = htmlEncode(source);
 
@@ -19,172 +18,227 @@ function render_mermaid_diagram(params) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 <style>
-  body {
-    min-height: 100vh;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    font-family: Arial, sans-serif;
-  }
-
-  .container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
-
-  main {
-    flex: 1;
-    padding: 20px 0;
-    background-color: #fafafa;
-  }
-
-  .mermaid {
-    width: 100%;
-    padding: 20px;
-    margin-top: 20px;
- }
-  #error-log {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #f44336;
-    background-color: #ffebee;
-    border-radius: 4px;
-    width: 100%;
-    max-width: 800px;
-    display: none;
-  }
-
-  #error-log.has-errors {
-    display: block;
-  }
-
-  header {
-    background-color: #f5f5f5;
-    padding: 20px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    width: 100%;
-  }
-
-  h2 {
-    text-align: center;
-    margin: 0;
-    color: #333;
-    font-size: 1.8rem;
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      padding: 0 15px;
-    }
-
-    .mermaid {
-      padding: 10px;
-    }
-
-    h2 {
-      font-size: 1.5rem;
-    }
-
-    header {
-      padding: 15px 0;
-    }
-
-    main {
-      padding: 15px 0;
-    }
-  }
+*,*::before,*::after{box-sizing:border-box}
+body{min-height:100vh;margin:0;display:flex;flex-direction:column;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fafafa}
+.container{width:100%;max-width:1200px;margin:0 auto;padding:0 20px}
+header{background:#fff;padding:16px 0;box-shadow:0 1px 3px rgba(0,0,0,.1);position:sticky;top:0;z-index:100}
+header .container{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h2{margin:0;color:#1a1a1a;font-size:1.5rem;font-weight:600}
+main{flex:1;padding:20px 0;overflow:hidden}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s ease}
+.btn:hover{background:#f3f4f6;border-color:#9ca3af}
+.btn:active{background:#e5e7eb}
+.btn svg{width:16px;height:16px}
+.btn-group{display:flex;border-radius:6px;overflow:hidden}
+.btn-group .btn{border-radius:0;margin-left:-1px}
+.btn-group .btn:first-child{border-radius:6px 0 0 6px;margin-left:0}
+.btn-group .btn:last-child{border-radius:0 6px 6px 0}
+.zoom-level{min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+.diagram-wrapper{position:relative;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;min-height:400px}
+.diagram-container{transform-origin:0 0;transition:transform .2s ease;padding:20px;display:inline-block;min-width:100%}
+.mermaid{width:100%}
+#error-log{margin-top:16px;padding:12px 16px;border:1px solid #fca5a5;background:#fef2f2;border-radius:6px;display:none}
+#error-log.has-errors{display:block}
+#error-log h3{margin:0 0 8px;font-size:.875rem;color:#b91c1c}
+#error-content{margin:0;font-size:.75rem;color:#7f1d1d;white-space:pre-wrap;font-family:ui-monospace,monospace}
+@media(max-width:640px){
+  .container{padding:0 12px}
+  h2{font-size:1.25rem}
+  header .container{justify-content:center}
+  .controls{justify-content:center}
+  .btn{padding:6px 10px;font-size:.8rem}
+}
 </style>
 </head>
 <body>
 <header>
     <div class="container">
         <h2>${title}</h2>
-    </div>
-    </header>
-    <main>
-        <div class="container">
-<pre class="mermaid">
-${encodedSource}
-</pre>
-            <div id="error-log">
-                <h3>Parse Errors:</h3>
-                <pre id="error-content"></pre>
+        <div class="controls">
+            <div class="btn-group">
+                <button class="btn" id="zoom-out" title="Zoom Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6"/></svg>
+                </button>
+                <button class="btn" id="zoom-reset" title="Reset Zoom">
+                    <span class="zoom-level">100%</span>
+                </button>
+                <button class="btn" id="zoom-in" title="Zoom In">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/></svg>
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="download-svg" title="Download SVG">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    SVG
+                </button>
+                <button class="btn" id="download-png" title="Download PNG">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    PNG
+                </button>
             </div>
         </div>
-    </main>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <div class="diagram-wrapper" id="diagram-wrapper">
+            <div class="diagram-container" id="diagram-container">
+                <pre class="mermaid">
+${encodedSource}
+</pre>
+            </div>
+        </div>
+        <div id="error-log">
+            <h3>Parse Errors:</h3>
+            <pre id="error-content"></pre>
+        </div>
+    </div>
+</main>
 <script type="module">
     import zenuml from 'https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-zenuml@0.2.0/dist/mermaid-zenuml.esm.min.mjs';
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: false,
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.esm.min.mjs';
+    
+    mermaid.initialize({
+        startOnLoad: false,
         theme: 'default',
-        securityLevel: 'loose',
-        experimental: true
+        securityLevel: 'loose'
     });
-    // Register ZenUML external diagram plugin
+    
     await mermaid.registerExternalDiagrams([zenuml]);
     await mermaid.registerIconPacks([
         {
-            name: 'logos', // Technology and brand logos
+            name: 'logos',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/logos@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         },
         {
-            name: 'simple-icons', // More technology and brand logos
+            name: 'simple-icons',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/simple-icons@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         },
         {
-            name: 'mdi', // Material Design Icons (broad general symbols)
+            name: 'mdi',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/mdi@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         },
         {
-            name: 'fa6-solid', // Font Awesome 6 Solid (general symbols)
+            name: 'fa6-solid',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/fa6-solid@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         },
         {
-            name: 'fa6-regular', // Font Awesome 6 Regular (outlined general symbols)
+            name: 'fa6-regular',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/fa6-regular@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         },
         {
-            name: 'fa6-brands', // Font Awesome 6 Brands (more brand logos)
+            name: 'fa6-brands',
             loader: async () => {
                 const response = await fetch('https://unpkg.com/@iconify-json/fa6-brands@1/icons.json');
                 return response.ok ? response.json() : null;
             }
         }
-        // Add other specific packs here if needed for niche domains,
-        // found via icones.js.org and their unpkg JSON links here
     ]);
 
-mermaid.parseError = function (err, hash) {
-    const errorLog = document.getElementById('error-log');
-    const errorContent = document.getElementById('error-content');
+    mermaid.parseError = function (err, hash) {
+        const errorLog = document.getElementById('error-log');
+        const errorContent = document.getElementById('error-content');
+        errorContent.textContent = typeof err === 'object' ? JSON.stringify(err, null, 2) : err;
+        errorLog.classList.add('has-errors');
+    };
     
-    // Convert err to string if it's an object
-    if (typeof err === 'object') {
-        errorContent.textContent = JSON.stringify(err, null, 2);
-    } else {
-        errorContent.textContent = err;
+    await mermaid.run();
+
+    // Zoom controls
+    let currentZoom = 1;
+    const zoomStep = 0.25;
+    const minZoom = 0.25;
+    const maxZoom = 4;
+    const container = document.getElementById('diagram-container');
+    const zoomDisplay = document.querySelector('.zoom-level');
+
+    function updateZoom(newZoom) {
+        currentZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+        container.style.transform = \`scale(\${currentZoom})\`;
+        zoomDisplay.textContent = Math.round(currentZoom * 100) + '%';
     }
-    
-    errorLog.classList.add('has-errors');
-};
-   await mermaid.run();
+
+    document.getElementById('zoom-in').addEventListener('click', () => updateZoom(currentZoom + zoomStep));
+    document.getElementById('zoom-out').addEventListener('click', () => updateZoom(currentZoom - zoomStep));
+    document.getElementById('zoom-reset').addEventListener('click', () => updateZoom(1));
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === '=' || e.key === '+') { e.preventDefault(); updateZoom(currentZoom + zoomStep); }
+            if (e.key === '-') { e.preventDefault(); updateZoom(currentZoom - zoomStep); }
+            if (e.key === '0') { e.preventDefault(); updateZoom(1); }
+        }
+    });
+
+    // Download functions
+    function getSvgElement() {
+        return document.querySelector('.mermaid svg');
+    }
+
+    function downloadSvg() {
+        const svg = getSvgElement();
+        if (!svg) return;
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '${title.replace(/[^a-z0-9]/gi, '_')}.svg';
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadPng() {
+        const svg = getSvgElement();
+        if (!svg) return;
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        img.onload = () => {
+            const scale = 2;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(scale, scale);
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            
+            canvas.toBlob((blob) => {
+                const pngUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = pngUrl;
+                link.download = '${title.replace(/[^a-z0-9]/gi, '_')}.png';
+                link.click();
+                URL.revokeObjectURL(pngUrl);
+            }, 'image/png');
+        };
+        img.src = url;
+    }
+
+    document.getElementById('download-svg').addEventListener('click', downloadSvg);
+    document.getElementById('download-png').addEventListener('click', downloadPng);
 </script>
 </body>
 </html>
