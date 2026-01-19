@@ -89,7 +89,7 @@ ${processedSource}
     </div>
 </main>
 <script type="module">
-    import zenuml from 'https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-zenuml@0.2.0/dist/mermaid-zenuml.esm.min.mjs';
+    import zenuml from 'https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-zenuml@0.2.2/dist/mermaid-zenuml.esm.min.mjs';
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.esm.min.mjs';
     
     mermaid.initialize({
@@ -198,36 +198,70 @@ ${processedSource}
         URL.revokeObjectURL(url);
     }
 
-    function downloadPng() {
+    async function downloadPng() {
         const svg = getSvgElement();
         if (!svg) return;
-        const svgData = new XMLSerializer().serializeToString(svg);
+        
+        // Clone SVG and inline all styles to avoid cross-origin issues
+        const clone = svg.cloneNode(true);
+        const styles = getComputedStyle(svg);
+        
+        // Set explicit dimensions
+        const bbox = svg.getBBox();
+        const width = svg.width.baseVal.value || bbox.width + 40;
+        const height = svg.height.baseVal.value || bbox.height + 40;
+        
+        clone.setAttribute('width', width);
+        clone.setAttribute('height', height);
+        
+        // Remove external references that cause tainting
+        clone.querySelectorAll('image').forEach(img => {
+            const href = img.getAttribute('href') || img.getAttribute('xlink:href');
+            if (href && href.startsWith('http')) {
+                img.remove(); // Remove external images
+            }
+        });
+        
+        const svgData = new XMLSerializer().serializeToString(clone);
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+        const dataUrl = 'data:image/svg+xml;base64,' + svgBase64;
+        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
         
         img.onload = () => {
             const scale = 2;
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0);
-            URL.revokeObjectURL(url);
             
-            canvas.toBlob((blob) => {
-                const pngUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = pngUrl;
-                link.download = '${title.replace(/[^a-z0-9]/gi, '_')}.png';
-                link.click();
-                URL.revokeObjectURL(pngUrl);
-            }, 'image/png');
+            try {
+                canvas.toBlob((blob) => {
+                    if (!blob) return;
+                    const pngUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = pngUrl;
+                    link.download = '${title.replace(/[^a-z0-9]/gi, '_')}.png';
+                    link.click();
+                    URL.revokeObjectURL(pngUrl);
+                }, 'image/png');
+            } catch (e) {
+                // Fallback: download SVG if PNG fails
+                console.warn('PNG export failed, downloading SVG instead:', e);
+                downloadSvg();
+            }
         };
-        img.src = url;
+        
+        img.onerror = () => {
+            console.warn('PNG conversion failed, downloading SVG instead');
+            downloadSvg();
+        };
+        
+        img.src = dataUrl;
     }
 
     document.getElementById('download-svg').addEventListener('click', downloadSvg);
