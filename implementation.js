@@ -1,15 +1,8 @@
 function render_mermaid_diagram(params) {
     const { title, source } = params;
-    function htmlEncode(str) {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    const encodedSource = htmlEncode(source);
+    
+    // Convert escaped newlines to actual newlines for mermaid parsing
+    const processedSource = source.replace(/\\n/g, '\n');
 
     const htmlString = `<!DOCTYPE html>
 <html lang="en">
@@ -85,7 +78,7 @@ main{flex:1;padding:20px 0;overflow:hidden}
         <div class="diagram-wrapper" id="diagram-wrapper">
             <div class="diagram-container" id="diagram-container">
                 <pre class="mermaid">
-${encodedSource}
+${processedSource}
 </pre>
             </div>
         </div>
